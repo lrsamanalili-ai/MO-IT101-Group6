@@ -1,4 +1,5 @@
 MO-IT101 Group 6 – MotorPH Payroll System
+
 Team Details
 
 Members:
@@ -27,4 +28,6 @@ Calculates the employee's gross salary
 Applies necessary deductions
 Computes the final net salary
 
-The program integrates all modules developed during the course to simulate a basic payroll system for MotorPH employees.
+This system integrates all modues developed from Week 5 to Week 8 of the course project.
+
+Project Plan Link
