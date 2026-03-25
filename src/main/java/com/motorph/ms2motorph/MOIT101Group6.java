@@ -48,7 +48,9 @@ public class MOIT101Group6 {
     private static final int PAYROLL_TAX = 10;
     private static final int PAYROLL_TOTAL_DEDUCTIONS = 11;
 
+    // Employee rows are stored as simple arrays to keep the structure lightweight.
     private static final List<Object[]> employeeRecords = new ArrayList<>();
+    // Attendance rows are grouped by employee ID so payroll lookup stays fast.
     private static final Map<Integer, List<Object[]>> attendanceByEmployeeId = new HashMap<>();
 
     private static final String[] MONTH_NAMES = {
@@ -89,7 +91,7 @@ public class MOIT101Group6 {
         System.out.println("                        MOTORPH PAYROLL SYSTEM");
         System.out.println("======================================================================");
 
-        // Load the CSV data before showing any menu so payroll calculations are ready.
+        // Load both CSV files before showing the menu so all payroll data is ready.
         loadEmployeeData();
         loadAttendanceData();
 
@@ -135,6 +137,7 @@ public class MOIT101Group6 {
                     continue;
                 }
 
+                // Split the CSV row into fields and trim each value for clean parsing.
                 String[] employeeFields = splitCsvLine(line);
                 if (employeeFields.length < 14) {
                     continue;
@@ -167,6 +170,7 @@ public class MOIT101Group6 {
                 double monthlySalary = parseDoubleSafe(employeeFields[13].replace(",", ""));
                 double hourlyRate = monthlySalary > 0 ? monthlySalary / 21.0 / 8.0 : 0.0;
 
+                // Keep only the fields needed by the program in a compact array row.
                 employeeRecords.add(new Object[]{
                         employeeId,
                         firstName,
@@ -200,6 +204,7 @@ public class MOIT101Group6 {
                     continue;
                 }
 
+                // Split the attendance CSV row into fields before parsing the date and times.
                 String[] attendanceFields = splitCsvLine(line);
                 if (attendanceFields.length < 6) {
                     continue;
@@ -224,6 +229,7 @@ public class MOIT101Group6 {
                     continue;
                 }
 
+                // Convert the date text into year, month, and day values.
                 int[] dateParts = parseAttendanceDate(attendanceFields[3]);
                 int year = dateParts[0];
                 int month = dateParts[1];
@@ -233,6 +239,7 @@ public class MOIT101Group6 {
                     continue;
                 }
 
+                // Store each attendance row as a simple array and group it by employee ID.
                 Object[] attendanceRecord = new Object[]{
                         employeeId,
                         year,
@@ -276,6 +283,7 @@ public class MOIT101Group6 {
         return fields.toArray(new String[0]);
     }
 
+    // Support both MM/DD/YYYY and YYYY-MM-DD date formats from the CSV file.
     private static int[] parseAttendanceDate(String dateText) {
         int year = 0;
         int month = 0;
@@ -300,6 +308,7 @@ public class MOIT101Group6 {
         return new int[]{year, month, day};
     }
 
+    // Make sure time values always have minutes so LocalTime can parse them reliably.
     private static String normalizeTime(String rawTime) {
         String trimmedTime = rawTime == null ? "" : rawTime.trim();
         if (trimmedTime.isEmpty()) {
@@ -319,6 +328,7 @@ public class MOIT101Group6 {
         }
     }
 
+    // Convert numeric text safely; invalid values become 0.0 instead of crashing.
     private static double parseDoubleSafe(String text) {
         if (text == null || text.trim().isEmpty()) {
             return 0.0;
@@ -477,6 +487,7 @@ public class MOIT101Group6 {
         return value == null ? "" : value;
     }
 
+    // Show one employee's payroll only for June to December, matching the requested range.
     private static void displaySingleEmployeePayroll(Object[] employeeRecord) {
         System.out.println();
         System.out.println("========================================================================");
@@ -490,6 +501,7 @@ public class MOIT101Group6 {
 
         boolean hasData = false;
 
+        // Skip months with no attendance data so the output stays focused.
         for (int month = FIRST_DISPLAY_MONTH; month <= LAST_DISPLAY_MONTH; month++) {
             double[] payrollSummary = calculatePayrollFor(employeeRecord, month, PAYROLL_YEAR);
 
@@ -544,6 +556,7 @@ public class MOIT101Group6 {
         System.out.println("========================================================================");
     }
 
+    // Print payroll summaries for every employee using the same June-to-December range.
     private static void displayAllEmployeesPayroll() {
         System.out.println();
         System.out.println("=======================================================================");
@@ -560,6 +573,7 @@ public class MOIT101Group6 {
 
             boolean hasData = false;
 
+            // Only show months where attendance exists for this employee.
             for (int month = FIRST_DISPLAY_MONTH; month <= LAST_DISPLAY_MONTH; month++) {
                 double[] payrollSummary = calculatePayrollFor(employeeRecord, month, PAYROLL_YEAR);
 
@@ -613,6 +627,7 @@ public class MOIT101Group6 {
             return payrollSummary;
         }
 
+        // Walk only the employee's attendance rows instead of scanning the entire dataset.
         for (Object[] attendanceRecord : employeeAttendance) {
             if (getAttendanceYear(attendanceRecord) != year || getAttendanceMonth(attendanceRecord) != month) {
                 continue;
@@ -641,7 +656,7 @@ public class MOIT101Group6 {
                 + payrollSummary[PAYROLL_SECOND_CUTOFF_GROSS];
 
         if (totalMonthlyGross > 0) {
-            // Deductions are based on the combined gross of both cutoffs.
+            // Government deductions are based on the combined gross from both cutoffs.
             payrollSummary[PAYROLL_SSS] = computeSSS(totalMonthlyGross);
             payrollSummary[PAYROLL_PHILHEALTH] = computePhilhealth(totalMonthlyGross);
             payrollSummary[PAYROLL_PAGIBIG] = computePagibig(totalMonthlyGross);
@@ -680,6 +695,7 @@ public class MOIT101Group6 {
             LocalTime logout = LocalTime.parse(logoutStr.trim(), timeFormat);
 
             LocalTime workStart = LocalTime.of(8, 0);
+            // 8:05 AM still counts as 8:00 AM for the attendance grace period.
             LocalTime graceEnd = LocalTime.of(8, 5);
             LocalTime lunchStart = LocalTime.of(12, 0);
             LocalTime lunchEnd = LocalTime.of(13, 0);
@@ -711,6 +727,7 @@ public class MOIT101Group6 {
         }
     }
 
+    // Contribution tables use the combined monthly gross, not the employee's base salary.
     private static double computeSSS(double salary) {
         if (salary < 3250) return 135.00;
         else if (salary < 3750) return 157.50;
@@ -759,6 +776,7 @@ public class MOIT101Group6 {
         else return 1125.00;
     }
 
+    // Contribution tables use the combined monthly gross, not the employee's base salary.
     private static double computePhilhealth(double salary) {
         double premium;
 
@@ -773,6 +791,7 @@ public class MOIT101Group6 {
         return premium / 2;
     }
 
+    // Contribution tables use the combined monthly gross, not the employee's base salary.
     private static double computePagibig(double salary) {
         double contribution;
 
@@ -789,6 +808,7 @@ public class MOIT101Group6 {
         return contribution;
     }
 
+    // Compute monthly tax after the government deductions have been removed.
     private static double computeMonthlyTax(double taxableIncome) {
         if (taxableIncome <= 20832) {
             return 0;
@@ -822,6 +842,7 @@ public class MOIT101Group6 {
         return DAYS_IN_MONTH[month];
     }
 
+    // Small accessor helpers keep the array-based code readable.
     private static int getEmployeeId(Object[] employeeRecord) {
         return (int) employeeRecord[EMPLOYEE_ID];
     }
