@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>com.motorph</groupId>
-    <artifactId>MS2MotorPH</artifactId>
+    <artifactId>MOIT101Group6</artifactId>
     <version>1.0-SNAPSHOT</version>
     
     <properties>
@@ -40,10 +40,10 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
-                    <mainClass>com.motorph.ms2motorph.MS2MotorPH</mainClass>
+                    <mainClass>com.motorph.ms2motorph.MOIT101Group6</mainClass>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-    <name>MS2MotorPH</name>
+    <name>MOIT101Group6</name>
 </project>
